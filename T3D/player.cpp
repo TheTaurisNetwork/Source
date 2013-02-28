@@ -3037,9 +3037,10 @@ void Player::updateMove(const Move* move)
       mFalling = false;
    else
    {
-      VectorF vel;
-      mWorldToObj.mulV(mVelocity,&vel);
-      mFalling = vel.z < mDataBlock->fallingSpeedThreshold;
+      //VectorF vel;
+      //mWorldToObj.mulV(mVelocity,&vel);
+      //mFalling = vel.z < mDataBlock->fallingSpeedThreshold;
+      mFalling = true;
    }
    
    // Vehicle Dismount   
