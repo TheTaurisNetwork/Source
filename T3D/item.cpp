@@ -50,7 +50,7 @@ const S32 sCollisionTimeout = 15;       // Timout value in ticks
 static F32 sMinWarpTicks = 0.5 ;        // Fraction of tick at which instant warp occures
 static S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
 
-F32 Item::mGravity = -20.0f;
+//F32 Item::mGravity = -20.0f;
 
 const U32 sClientCollisionMask = (TerrainObjectType     |
                                   InteriorObjectType    |  StaticShapeObjectType |
@@ -339,6 +339,12 @@ Item::~Item()
    SAFE_DELETE(mLight);
 }
 
+//----------------------------------------------------------------------------
+
+void Item::setGravity(F32 gravity)
+{
+   mGravity = gravity;
+}
 
 //----------------------------------------------------------------------------
 
@@ -347,6 +353,8 @@ bool Item::onAdd()
    if (!Parent::onAdd() || !mDataBlock)
       return false;
 
+   mGravity = -20;
+   
    if (mStatic)
       mAtRest = true;
    mObjToWorld.getColumn(3,&delta.pos);
@@ -1163,6 +1171,20 @@ void Item::unpackUpdate(NetConnection *connection, BitStream *stream)
       }
    }
    Parent::setTransform(mat);
+}
+
+DefineEngineMethod( Item, setGravity, bool, ( F32 grav ),,
+   "@Set a gravity factor for the shape (-20 for normal)")
+{
+   object->setGravity(grav);
+   return true;
+}
+
+DefineEngineMethod( Item, getGravity, bool, (),,
+   "@Get a gravity factor for the shape")
+{
+   F32 grav = object->mGravity;
+   return grav;
 }
 
 DefineEngineMethod( Item, isStatic, bool, (),, 
