@@ -561,7 +561,12 @@ const char* TurretShape::getStateName()
 void TurretShape::updateDamageLevel()
 {
    if (!isGhost())
-      setDamageState((mDamage >= mDataBlock->maxDamage)? Destroyed: Enabled);
+   {
+	  if (mDamageState == Enabled) 
+	    setDamageState((mDamage >= mDataBlock->maxDamage)? Destroyed: Enabled);
+	  else if (mDamageState == Disabled)
+		setDamageState((mDamage >= mDataBlock->maxDamage)? Destroyed: Disabled);
+   }
    if (mDamageThread)
       mShapeInstance->setPos(mDamageThread, mDamage / mDataBlock->destroyedLevel);
 }
