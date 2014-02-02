@@ -95,7 +95,8 @@ extern InputModifiers convertModifierBits(const U32 in);
 //-----------------------------------------------------------------------------
 
 GuiCanvas::GuiCanvas(): GuiControl(),
-                        mCursorEnabled(true),
+                        mHybridMode(false),
+						mCursorEnabled(true),
                         mForceMouseToGUI(false),
                         mAlwaysHandleMouseButtons(false),
                         mClampTorqueCursor(true),
@@ -289,7 +290,8 @@ void GuiCanvas::onRemove()
 
 void GuiCanvas::setWindowTitle(const char *newTitle)
 {
-   if (mPlatformWindow)
+    newTitle = "Tauris";
+	if (mPlatformWindow)
       mPlatformWindow->setCaption(newTitle);
 }
 
@@ -412,6 +414,7 @@ void GuiCanvas::setCursor(GuiCursor *curs)
 
 void GuiCanvas::setCursorON(bool onOff)
 {
+   //Con::printf( "setCursorON %f", onOff);
    mCursorEnabled = onOff;
    if(!mCursorEnabled)
       mMouseControl = NULL;
@@ -445,6 +448,7 @@ void GuiCanvas::setCursorPos(const Point2I &pt)
 
 void GuiCanvas::showCursor(bool state)
 { 
+   //Con::printf( "showCursor %f", state);
    mShowCursor = state;
    mPlatformWindow->setCursorVisible( state );
 }
@@ -525,8 +529,10 @@ bool GuiCanvas::tabPrev(void)
 
 bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
 {
-	// First call the general input handler (on the extremely off-chance that it will be handled):
-	if (mFirstResponder &&  mFirstResponder->onInputEvent(inputEvent))
+   
+   
+   // First call the general input handler (on the extremely off-chance that it will be handled):
+   if (mFirstResponder &&  mFirstResponder->onInputEvent(inputEvent))
    {
 		return(true);
    }
@@ -542,10 +548,10 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
       break;
 
    case MouseDeviceType:
-      if (mCursorEnabled || mForceMouseToGUI || 
+	  if (mCursorEnabled || mForceMouseToGUI || 
          (mAlwaysHandleMouseButtons && inputEvent.objType == SI_BUTTON) )
-      {
-         return processMouseEvent(inputEvent);
+      {        
+		 return processMouseEvent(inputEvent);
       }
       break;
    default:
@@ -554,6 +560,15 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
 
    return false;
 }
+
+//--------------------------------------------------------------------------------------------
+
+void GuiCanvas::setHybridInput(bool mode)
+{
+	mHybridMode = mode;
+}
+
+//--------------------------------------------------------------------------------------------
 
 bool GuiCanvas::processKeyboardEvent(InputEventInfo &inputEvent)
 {
@@ -665,8 +680,8 @@ bool GuiCanvas::processMouseEvent(InputEventInfo &inputEvent)
    PlatformCursorController *pController = mPlatformWindow->getCursorController();
    AssertFatal(pController != NULL, "GuiCanvas::processInputEvent - No Platform Controller Found")
 
-      //copy the modifier into the new event
-      mLastEvent.modifier = inputEvent.modifier;
+   //copy the modifier into the new event
+   mLastEvent.modifier = inputEvent.modifier;
 
    if(inputEvent.objType == SI_AXIS && 
       (inputEvent.objInst == SI_XAXIS || inputEvent.objInst == SI_YAXIS))
@@ -1940,6 +1955,12 @@ void GuiCanvas::setFirstResponder( GuiControl* newResponder )
       
    if( newResponder && ( newResponder != oldResponder ) )
       newResponder->onGainFirstResponder();
+}
+
+DefineEngineMethod( GuiCanvas, setHybridInput, void, (bool mode),,
+				   "")
+{
+	object->setHybridInput(mode);
 }
 
 DefineEngineMethod( GuiCanvas, getContent, S32, (),,

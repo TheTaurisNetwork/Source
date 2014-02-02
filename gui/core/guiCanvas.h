@@ -203,10 +203,15 @@ public:
 
    static void initPersistFields();
 
+   virtual void setHybridInput(bool mode);
+   //virtual void handleSpinCamera();
+
+   bool mHybridMode;
+   //Point2I mPos;
    /// @name Rendering methods
    ///
    /// @{
-
+ 
    /// Repaints the dirty regions of the canvas
    /// @param   preRenderOnly   If set to true, only the onPreRender methods of all the GuiControls will be called
    /// @param   bufferSwap      If set to true, it will swap buffers at the end. This is to support canvas-subclassing.

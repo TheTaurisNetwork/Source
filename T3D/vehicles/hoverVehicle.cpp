@@ -71,7 +71,7 @@ ConsoleDocClass( HoverVehicle,
 namespace {
 
 const U32 sIntergrationsPerTick = 1;
-const F32 sHoverVehicleGravity  = -20;
+const F32 sHoverVehicleGravity  = 0;
 
 const U32 sCollisionMoveMask = (TerrainObjectType        | InteriorObjectType   |
                                 PlayerObjectType         | StaticShapeObjectType |
@@ -869,7 +869,7 @@ void HoverVehicle::updateForces(F32 /*dt*/)
    force += mAppliedForce;
 
    // Container buoyancy & drag
-   force  += Point3F(0, 0,-mBuoyancy * sHoverVehicleGravity * mRigid.mass * mGravityMod);
+   force  += Point3F(0, 0, 0);
    force  -= mRigid.linVelocity * mDrag;
    torque -= mRigid.angMomentum * mDrag;
 

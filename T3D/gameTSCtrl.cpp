@@ -1,25 +1,3 @@
-//-----------------------------------------------------------------------------
-// Copyright (c) 2012 GarageGames, LLC
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to
-// deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
-//-----------------------------------------------------------------------------
-
 #include "T3D/gameTSCtrl.h"
 #include "console/consoleTypes.h"
 #include "T3D/gameBase/gameBase.h"
@@ -42,11 +20,14 @@ IMPLEMENT_CONOBJECT(GameTSCtrl);
 
 // See Torque manual (.CHM) for more information
 ConsoleDocClass( GameTSCtrl,
-	"@brief The main 3D viewport for a Torque 3D game.\n\n"
-	"@ingroup Gui3D\n");
+        "@brief The main 3D viewport for a Torque 3D game.\n\n"
+        "@ingroup Gui3D\n");
 
 GameTSCtrl::GameTSCtrl()
-{
+{  
+    mCursorObject = NULL;   // Last mouse-down object  
+    mTrackObject = NULL;        // The object under cursor  
+	dragging = false;
 }
 
 //---------------------------------------------------------------------------
@@ -55,14 +36,11 @@ bool GameTSCtrl::onAdd()
    if ( !Parent::onAdd() )
       return false;
 
-#ifdef TORQUE_DEMO_WATERMARK
-   mWatermark.init();
-#endif
-
    return true;
 }
 
 //---------------------------------------------------------------------------
+
 bool GameTSCtrl::processCameraQuery(CameraQuery *camq)
 {
    GameUpdateCameraFov();
@@ -76,93 +54,154 @@ void GameTSCtrl::renderWorld(const RectI &updateRect)
 }
 
 //---------------------------------------------------------------------------
-void GameTSCtrl::makeScriptCall(const char *func, const GuiEvent &evt) const
-{
-   // write screen position
-   char *sp = Con::getArgBuffer(32);
-   dSprintf(sp, 32, "%d %d", evt.mousePoint.x, evt.mousePoint.y);
-
-   // write world position
-   char *wp = Con::getArgBuffer(32);
-   Point3F camPos;
-   mLastCameraQuery.cameraMatrix.getColumn(3, &camPos);
-   dSprintf(wp, 32, "%g %g %g", camPos.x, camPos.y, camPos.z);
-
-   // write click vector
-   char *vec = Con::getArgBuffer(32);
-   Point3F fp(evt.mousePoint.x, evt.mousePoint.y, 1.0);
-   Point3F ray;
-   unproject(fp, &ray);
-   ray -= camPos;
-   ray.normalizeSafe();
-   dSprintf(vec, 32, "%g %g %g", ray.x, ray.y, ray.z);
-
-   Con::executef( (SimObject*)this, func, sp, wp, vec );
-}
 
 void GameTSCtrl::onMouseDown(const GuiEvent &evt)
-{
-   Parent::onMouseDown(evt);
-   if( isMethod( "onMouseDown" ) )
-      makeScriptCall( "onMouseDown", evt );
-}
+{ 
+  lastCursor = evt.mousePoint;
 
-void GameTSCtrl::onRightMouseDown(const GuiEvent &evt)
-{
-   Parent::onRightMouseDown(evt);
-   if( isMethod( "onRightMouseDown" ) )
-      makeScriptCall( "onRightMouseDown", evt );
-}
+  if (mCursorObject == NULL)
+  {   
+	static const char *argv[2];  
+	argv[0] = "mouse0";  
+    argv[1] = "1";
+    Con::execute( 2, argv); 
+  }
 
-void GameTSCtrl::onMiddleMouseDown(const GuiEvent &evt)
-{
-   Parent::onMiddleMouseDown(evt);
-   if( isMethod( "onMiddleMouseDown" ) )
-      makeScriptCall( "onMiddleMouseDown", evt );
 }
 
 void GameTSCtrl::onMouseUp(const GuiEvent &evt)
+{  
+   if (mCursorObject == NULL)
+   {
+	 if (mTrackObject != NULL && !dragging)
+	 {
+ 	    mTrackObject->setSelected(false); 
+        mTrackObject = NULL;	 
+	 }
+   
+     static const char *argv[2];  
+	 argv[0] = "mouse0";  
+	 argv[1] = "0";
+     Con::execute( 2, argv);     
+     dragging = false;
+   }
+   else
+   {
+	 if (mCursorObject != mTrackObject && mTrackObject != NULL) 
+	    mTrackObject->setSelected(false);
+	 mTrackObject = (ShapeBase*)mCursorObject;	  
+     mTrackObject->setSelected( mTrackObject ); 
+   }
+}
+
+//---------------------------------------------------------------------------
+/*
+IMPLEMENT_CALLBACK( GameTSCtrl, onMouseWheelUp, void, (), (), "");
+IMPLEMENT_CALLBACK( GameTSCtrl, onMouseWheelDown, void, (), (), "");
+
+void GameTSCtrl::onMouseWheelUp(const GuiEvent &evt)
 {
-   Parent::onMouseUp(evt);
-   if( isMethod( "onMouseUp" ) )
-      makeScriptCall( "onMouseUp", evt );
+  onMouseWheelUp_callback();
+}
+
+void GameTSCtrl::onMouseWheelDown(const GuiEvent &evt)
+{
+  onMouseWheelDown_callback();
+}
+*/
+//---------------------------------------------------------------------------
+
+void GameTSCtrl::onRightMouseDown(const GuiEvent &evt)
+{
 }
 
 void GameTSCtrl::onRightMouseUp(const GuiEvent &evt)
 {
-   Parent::onRightMouseUp(evt);
-   if( isMethod( "onRightMouseUp" ) )
-      makeScriptCall( "onRightMouseUp", evt );
+}
+
+//---------------------------------------------------------------------------
+
+void GameTSCtrl::onMiddleMouseDown(const GuiEvent &evt)
+{
 }
 
 void GameTSCtrl::onMiddleMouseUp(const GuiEvent &evt)
 {
-   Parent::onMiddleMouseUp(evt);
-   if( isMethod( "onMiddleMouseUp" ) )
-      makeScriptCall( "onMiddleMouseUp", evt );
 }
 
+//---------------------------------------------------------------------------
+
+void GameTSCtrl::onMouseDragged( const GuiEvent &evt) 
+{  
+	if (mCursorObject == NULL) 
+	{      
+        static const char *argv[2];  
+        
+		Point2I diff( evt.mousePoint - lastCursor);    
+        
+		dragging = true;
+
+        if (diff.x) {  
+			argv[0] = "yaw";  
+            argv[1] = Con::getFloatArg( diff.x);  
+            Con::execute( 2, argv);  
+        }  
+        if (diff.y) {  
+			argv[0] = "pitch";  
+            argv[1] = Con::getFloatArg( diff.y);  
+            Con::execute( 2, argv);  
+        }  
+              
+		// HACK - Have GuiCanvas skip next MouseMoveEvent  
+        //Canvas->ignoreNextMove = true;  
+        //Canvas->setCursorPos( lastCursor);  
+    }  
+}  
+
 void GameTSCtrl::onMouseMove(const GuiEvent &evt)
-{
+{ 
    if(gSnapLine)
       return;
-
+   
    MatrixF mat;
    Point3F vel;
    if ( GameGetCameraTransform(&mat, &vel) )
    {
       Point3F pos;
       mat.getColumn(3,&pos);
-      Point3F screenPoint((F32)evt.mousePoint.x, (F32)evt.mousePoint.y, -1.0f);
+      Point3F screenPoint((F32)evt.mousePoint.x, (F32)evt.mousePoint.y, 1.0f);
       Point3F worldPoint;
-      if (unproject(screenPoint, &worldPoint)) {
+      if (unproject(screenPoint, &worldPoint)) 
+	  {
          Point3F vec = worldPoint - pos;
          lineTestStart = pos;
          vec.normalizeSafe();
-         lineTestEnd = pos + vec * 1000;
-      }
+         lineTestEnd = pos + vec * 500;
+       
+		 static U32 losMask = VehicleObjectType | StaticShapeObjectType;  
+		 RayInfo ri;  
+         bool hit = gClientContainer.castRay( lineTestStart, lineTestEnd, losMask, &ri);  
+
+		 	 
+		 if (!hit)
+		 {
+		    //Con::printf("no hit!");
+			if (mCursorObject != NULL)
+			   mCursorObject->setHighlighted(false);
+			mCursorObject = NULL;		 
+		 }
+		 else
+		 {	    
+			if (ri.object != mCursorObject && mCursorObject != NULL)
+			   mCursorObject->setHighlighted(false);
+			mCursorObject = (ShapeBase*)ri.object;	
+			mCursorObject->setHighlighted(true);
+		 }
+	  }
    }
 }
+
+//---------------------------------------------------------------------------
 
 void GameTSCtrl::onRender(Point2I offset, const RectI &updateRect)
 {
@@ -172,38 +211,6 @@ void GameTSCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    if(!skipRender || true)
       Parent::onRender(offset, updateRect);
-
-#ifdef TORQUE_DEMO_WATERMARK
-   mWatermark.render(getExtent());
-#endif
 }
 
 //--------------------------------------------------------------------------
-
-DefineEngineFunction(snapToggle, void, (),,
-					 "@brief Prevents mouse movement from being processed\n\n"
-
-					 "In the source, whenever a mouse move event occurs "
-					 "GameTSCtrl::onMouseMove() is called. Whenever snapToggle() "
-					 "is called, it will flag a variable that can prevent this "
-					 "from happening: gSnapLine. This variable is not exposed to "
-					 "script, so you need to call this function to trigger it.\n\n"
-
-					 "@tsexample\n"
-					 "// Snapping is off by default, so we will toggle\n"
-					 "// it on first:\n"
-					 "PlayGui.snapToggle();\n\n"
-					 "// Mouse movement should be disabled\n"
-					 "// Let's turn it back on\n"
-					 "PlayGui.snapToggle();\n"
-					 "@endtsexample\n\n"
-
-					 "@ingroup GuiGame")
-{
-	gSnapLine = !gSnapLine;
-}
-//
-//ConsoleFunction( snapToggle, void, 1, 1, "()" )
-//{
-//   gSnapLine = !gSnapLine;
-//}

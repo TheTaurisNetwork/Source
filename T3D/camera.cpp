@@ -427,11 +427,15 @@ void Camera::processTick(const Move* move)
       updateContainer();
       return;
    }
-
+   
+  
    Point3F vec,pos;
    if (move) 
    {
-      bool strafeMode = move->trigger[2];
+	  if (move->freeLook == false)
+        return;
+ 
+	  bool strafeMode = move->trigger[4];
 
       // If using editor then force camera into fly mode, unless using EditOrbitMode
       if(gEditingMission && mMode != FlyMode && mMode != EditOrbitMode)
@@ -563,8 +567,8 @@ void Camera::processTick(const Move* move)
                mOrbitObject->getWorldBox().getCenter(&mPosition);
             }
          }
-
-         posVec = (mPosition + mOffset) - pos;
+	
+		 posVec = (mPosition + mOffset) - pos;
          mustValidateEyePoint = true;
          serverInterpolate = mNewtonMode;
       }
@@ -1321,6 +1325,20 @@ void Camera::setOrbitMode(GameBase *obj, const Point3F &pos, const Point3F &rot,
 
 //-----------------------------------------------------------------------------
 
+void Camera::zoomLevel( F32 dist )
+{
+   if (mCurOrbitDist >= mMaxOrbitDist / 2) 
+	  dist = dist * 10; 
+   if (mMaxOrbitDist < mCurOrbitDist + dist) 
+	  return;  
+   else if (mMinOrbitDist > mCurOrbitDist + dist)   
+	  return;  
+   
+   mCurOrbitDist += dist;  
+}
+
+//-----------------------------------------------------------------------------
+
 void Camera::setTrackObject(GameBase *obj, const Point3F &offset)
 {
    if(bool(mOrbitObject))
@@ -1350,8 +1368,12 @@ void Camera::_validateEyePoint(F32 pos, MatrixF *mat)
       // Use the eye transform to orient the camera
       Point3F dir;
       mat->getColumn(1, &dir);
-      if (mMaxOrbitDist - mMinOrbitDist > 0.0f)
-         pos *= mMaxOrbitDist - mMinOrbitDist;
+      if (mMaxOrbitDist < mCurOrbitDist)  
+         pos *= mMaxOrbitDist;  
+      else if (mMinOrbitDist > mCurOrbitDist)  
+         pos *= mMinOrbitDist;  
+      else  
+         pos *= mCurOrbitDist; 
       
       // Use the camera node's pos.
       Point3F startPos = getRenderPosition();
@@ -1975,4 +1997,11 @@ DefineEngineMethod( Camera, lookAt, void, (Point3F point), ,
                    "@param point The position to point the camera at.")
 {
    object->lookAt(point);
+}
+
+//----------------------------------------------------------------------------
+
+DefineEngineMethod( Camera, zoomLevel, void, (F32 dist), , "")
+{
+  object->zoomLevel(dist);
 }

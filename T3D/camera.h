@@ -71,9 +71,9 @@ class Camera: public ShapeBase
 
          CameraFirstMode = 0,
          CameraLastMode  = EditOrbitMode
-      };
+      }; 
 
-   protected:
+  protected:
 
       enum MaskBits
       {
@@ -156,7 +156,7 @@ class Camera: public ShapeBase
       virtual void setTransform( const MatrixF& mat );
       virtual void setRenderTransform( const MatrixF& mat );
 
-   public:
+  public:
 
       Camera();
       ~Camera();
@@ -168,7 +168,8 @@ class Camera: public ShapeBase
       void setRotation( const Point3F& viewRot );
 
       Point3F getOffset() { return mOffset; };
-      void lookAt( const Point3F& pos);
+      void zoomLevel( const F32 dist);
+	  void lookAt( const Point3F& pos);
       void setOffset( const Point3F& offset) { if( mOffset != offset ) mOffset = offset; setMaskBits( UpdateMask ); }
       void setFlyMode();
       void setOrbitMode( GameBase *obj, const Point3F& pos, const Point3F& rot, const Point3F& offset,
@@ -211,8 +212,8 @@ class Camera: public ShapeBase
       /// Orient the camera to view the given radius.  Requires that an
       /// edit orbit point has been set.
       void autoFitRadius( F32 radius );
-
-      /// @}
+	  
+	  /// @}
 
       // ShapeBase.
       static void initPersistFields();

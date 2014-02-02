@@ -974,6 +974,7 @@ void GuiControl::onMouseMove(const GuiEvent &event)
 
 void GuiControl::onMouseDragged(const GuiEvent &event)
 {
+
 }
 
 //-----------------------------------------------------------------------------
@@ -992,32 +993,14 @@ void GuiControl::onMouseLeave(const GuiEvent &event)
 
 bool GuiControl::onMouseWheelUp( const GuiEvent &event )
 {
-   //if this control is a dead end, make sure the event stops here
-   if ( !mVisible || !mAwake )
-      return true;
-
-   //pass the event to the parent
-   GuiControl *parent = getParent();
-   if ( parent )
-      return parent->onMouseWheelUp( event );
-   else
-      return false;
+ return false;
 }
 
 //-----------------------------------------------------------------------------
 
 bool GuiControl::onMouseWheelDown( const GuiEvent &event )
 {
-   //if this control is a dead end, make sure the event stops here
-   if ( !mVisible || !mAwake )
-      return true;
-
-   //pass the event to the parent
-   GuiControl *parent = getParent();
-   if ( parent )
-      return parent->onMouseWheelDown( event );
-   else
-      return false;
+ return false;
 }
 
 //-----------------------------------------------------------------------------

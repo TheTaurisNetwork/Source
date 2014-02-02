@@ -59,7 +59,7 @@ MissionArea::MissionArea()
    mArea.set(Point2I(768, 768), Point2I(512, 512));
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   mFlightCeiling      = 2000;
+   mFlightCeiling      = 900000;
    mFlightCeilingRange = 50;
 }
 

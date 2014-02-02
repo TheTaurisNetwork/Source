@@ -1550,7 +1550,7 @@ bool ActionMap::handleEvent(const InputEventInfo* pEvent)
 
    InputEventInfo eventNoModifiers = *pEvent;
    eventNoModifiers.modifier = ( InputModifiers ) 0;
-   
+   //Con::printf("handleEvent");
    for (SimSet::iterator itr = pActionMapSet->end() - 1;
         itr > pActionMapSet->begin(); itr--) {
       ActionMap* pMap = static_cast<ActionMap*>(*itr);

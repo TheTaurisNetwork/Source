@@ -513,7 +513,8 @@ void GameConnection::setControlObject(GameBase *obj)
       obj->setControllingClient(this);
 
       // Update the camera's FOV to match the new control object
-      setControlCameraFov( obj->getCameraFov() );
+      if (mCameraObject != obj)
+	    setControlCameraFov( obj->getCameraFov() );
    }
 
    // Okay, set our control object.

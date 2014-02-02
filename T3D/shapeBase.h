@@ -518,6 +518,7 @@ public:
       AIRepairNode = 31
    };
 
+
    // TODO: These are only really used in Basic Lighting
    // mode... we should probably move them somewhere else.
    bool shadowEnable;
@@ -635,6 +636,9 @@ public:
 
    /// @name Callbacks
    /// @{
+   DECLARE_CALLBACK( void, onSelected, ( ShapeBase* obj ) );
+   DECLARE_CALLBACK( void, onDeselected, ( ShapeBase* obj ) );
+
    DECLARE_CALLBACK( void, onEnabled, ( ShapeBase* obj, const char* lastState ) );
    DECLARE_CALLBACK( void, onDisabled, ( ShapeBase* obj, const char* lastState ) );
    DECLARE_CALLBACK( void, onDestroyed, ( ShapeBase* obj, const char* lastState ) );
@@ -669,6 +673,7 @@ class ShapeBase : public GameBase, public ISceneLight
 public:
    typedef GameBase Parent;
 
+   
    enum PublicConstants {
       ThreadSequenceBits = 6,
       MaxSequenceIndex = (1 << ThreadSequenceBits) - 1,
@@ -754,8 +759,8 @@ protected:
    /// @}
 
 protected:
-
-   // ShapeBase pointer to our mount object if it is ShapeBase, else it is NULL.
+	
+	// ShapeBase pointer to our mount object if it is ShapeBase, else it is NULL.
    ShapeBase *mShapeBaseMount;
 
    /// @name Mounted Images
@@ -999,6 +1004,10 @@ protected:
    U32 mLastRenderFrame;
    F32 mLastRenderDistance;
 
+   bool isSelectable;  
+   bool highlighted;  
+   bool selected;  
+   
    /// Do a reskin if necessary.
    virtual void reSkin();
 
@@ -1129,6 +1138,8 @@ protected:
    /// Renders the shape bounds as well as the 
    /// bounds of all mounted shape images.
    void _renderBoundingBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* );
+   void _renderHighlightBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* );
+   void _renderSelectBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance* );
 
    void emitDust( ParticleEmitter* emitter, F32 triggerHeight, const Point3F& offset, U32 numMilliseconds, const Point3F& axis = Point3F::Zero );
 
@@ -1235,6 +1246,9 @@ public:
    /// Sets the amount of damage on this object.
    void setDamageLevel(F32 damage);
 
+   
+   //void setSelected(ShapeBase* obj);
+   
    /// Changes the object's damage state.
    /// @param   state   New state of the object
    void setDamageState(DamageState state);
@@ -1780,7 +1794,12 @@ public:
    /// @see ShapeBaseData::cameraMaxFov
    virtual bool isValidCameraFov(F32 fov);
    /// @}
-
+   
+   bool IsSelectable( void) { return isSelectable; };  
+     
+   void setSelected( bool mode );  
+   void setHighlighted( bool mode);  
+   //void deselect( );  
 
    void processTick(const Move *move);
    void advanceTime(F32 dt);

@@ -238,7 +238,7 @@ void Move::pack(BitStream *stream, const Move * basemove)
    S32 i;
    bool triggerDifferent = false;
    for (i=0; i < MaxTriggerKeys; i++)
-      if (trigger[i] != basemove->trigger[i])
+	   if (trigger[i] != basemove->trigger[i])
          triggerDifferent = true;
    bool somethingDifferent = (pyaw!=basemove->pyaw)     ||
                              (ppitch!=basemove->ppitch) ||
@@ -295,7 +295,8 @@ void Move::unpack(BitStream *stream, const Move * basemove)
       bool triggersDiffer = stream->readFlag();
       for (S32 i = 0; i< MaxTriggerKeys; i++)
          trigger[i] = triggersDiffer ? stream->readFlag() : basemove->trigger[i];
-      unclamp();
+      //Con::printf( "%f", triggersDiffer );
+	  unclamp();
    }
    else
       *this = *basemove;

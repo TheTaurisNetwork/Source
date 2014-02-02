@@ -43,7 +43,7 @@ struct ContainerQueryInfo
         waterHeight(0.0f),                
         waterDensity(0.0f),
         waterViscosity(0.0f),
-        gravityScale(1.0f),
+        gravityScale(0.0f),
         appliedForce(0,0,0),
         box(-1,-1,-1,1,1,1),
         mass(1.0f),

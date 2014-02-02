@@ -52,8 +52,8 @@ class  GuiContainer : public GuiControl
       S32 mUpdateLayout; ///< Layout Update Mask
       ControlSizing mSizingOptions; ///< Control Sizing Options
       S32 mValidDockingMask;
-      
-   public:
+
+  public:
    
       DECLARE_CONOBJECT(GuiContainer);
       DECLARE_CATEGORY( "Gui Containers" );
@@ -90,7 +90,7 @@ class  GuiContainer : public GuiControl
       inline void setAnchorLeft(bool val) { mSizingOptions.mAnchorLeft = val; }
       inline void setAnchorRight(bool val) { mSizingOptions.mAnchorRight = val; }
 
-      ControlSizing getSizingOptions() const { return mSizingOptions; }
+	  ControlSizing getSizingOptions() const { return mSizingOptions; }
       void setSizingOptions(ControlSizing val) { mSizingOptions = val; }
 
       /// @}   

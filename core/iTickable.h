@@ -105,7 +105,6 @@ private:
    /// Returns a reference to the list of all ITickable objects.
    static Vector<ITickable *>& getProcessList();   
    
-   bool mProcessTick; ///< Set to true if this object wants tick processing
 protected:
    /// This method is called every frame and lets the control interpolate between
    /// ticks so you can smooth things as long as isProcessingTicks returns true
@@ -123,7 +122,9 @@ protected:
 
 public:
 
-   /// Constructor
+   
+   bool mProcessTick; ///< Set to true if this object wants tick processing
+	/// Constructor
    /// This will add the object to the process list
    ITickable();
 

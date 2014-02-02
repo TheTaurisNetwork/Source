@@ -256,7 +256,12 @@ class GuiControl : public SimGroup
       DECLARE_CALLBACK( void, onLoseFirstResponder, () );
       DECLARE_CALLBACK( void, onGainFirstResponder, () );
       
-      DECLARE_CALLBACK( void, onAction, () );
+	  //DECLARE_CALLBACK( void, onMouseWheelUp, () );
+      //DECLARE_CALLBACK( void, onMouseWheelDown, () );
+	  //DECLARE_CALLBACK( void, onRightMouseDown, () );
+      //DECLARE_CALLBACK( void, onRightMouseUp, () );
+	  
+	  DECLARE_CALLBACK( void, onAction, () );
       DECLARE_CALLBACK( void, onVisible, ( bool state ) );
       DECLARE_CALLBACK( void, onActive, ( bool state ) );
       
@@ -606,7 +611,7 @@ class GuiControl : public SimGroup
       
       virtual bool onMouseWheelUp(const GuiEvent &event);
       virtual bool onMouseWheelDown(const GuiEvent &event);
-      
+
       virtual void onRightMouseDown(const GuiEvent &event);
       virtual void onRightMouseUp(const GuiEvent &event);
       virtual void onRightMouseDragged(const GuiEvent &event);

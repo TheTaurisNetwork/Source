@@ -133,6 +133,7 @@ F32  ShapeBase::sDamageFlashDec = 0.02f;
 F32  ShapeBase::sFullCorrectionDistance = 0.5f;
 F32  ShapeBase::sCloakSpeed = 0.5;
 U32  ShapeBase::sLastRenderFrame = 0;
+//ShapeBase* ShapeBase::selected = NULL;  
 
 static const char *sDamageStateName[] =
 {
@@ -146,7 +147,7 @@ static const char *sDamageStateName[] =
 //----------------------------------------------------------------------------
 
 ShapeBaseData::ShapeBaseData()
- : shadowEnable( false ),
+ : shadowEnable( false ),  
    shadowSize( 128 ),
    shadowMaxVisibleDistance( 80.0f ),
    shadowProjectionDistance( 10.0f ),
@@ -864,6 +865,8 @@ IMPLEMENT_CALLBACK( ShapeBase, validateCameraFov, F32, (F32 fov), (fov),
 
 ShapeBase::ShapeBase()
  : mDrag( 0.0f ),
+   highlighted(false),
+   selected(false),
    mBuoyancy( 0.0f ),
    mWaterCoverage( 0.0f ),
    mLiquidHeight( 0.0f ),
@@ -1207,6 +1210,41 @@ void ShapeBase::onImpact(VectorF vec)
       mDataBlock->onImpact_callback( this, NULL, vec, vec.len() );
 }
 
+//----------------------------------------------------------------------------
+void ShapeBase::setSelected( bool mode ) 
+{  
+	//if (mode) { Con::printf("1"); }
+	//if (!mode) { Con::printf("0"); }
+	
+	if (isSelectable)
+	{
+
+	if (mode)
+	{   
+	  selected = true;
+      highlighted = false; 
+	  
+      mDataBlock->onSelected_callback( this ); 	
+	}
+	else
+	{
+	  selected = false;
+	  
+	  mDataBlock->onDeselected_callback( this );
+	}
+	}
+    
+}
+
+void ShapeBase::setHighlighted( bool mode ) 
+{  
+	if (isSelectable)
+	  highlighted = mode;    	    		
+}
+
+IMPLEMENT_CALLBACK( ShapeBaseData, onSelected, void, ( ShapeBase* obj ), ( obj ), "" );
+IMPLEMENT_CALLBACK( ShapeBaseData, onDeselected, void, ( ShapeBase* obj ), ( obj ), "" );
+//IMPLEMENT_CALLBACK( ShapeBaseData, onUse, void, ( ShapeBase* obj ), ( obj ), "" );
 
 //----------------------------------------------------------------------------
 
@@ -1836,6 +1874,8 @@ void ShapeBase::blowUp()
    }
 
    damageDir.set(0, 0, 1);
+
+   isSelectable = false;
 }
 
 //----------------------------------------------------------------------------
@@ -2629,7 +2669,7 @@ void ShapeBase::_prepRenderImage(   SceneRenderState *state,
    }
    
    if (  ( mShapeInstance && mShapeInstance->getCurrentDetail() < 0 ) ||
-         ( !mShapeInstance && !gShowBoundingBox ) ) 
+         ( !mShapeInstance && (!gShowBoundingBox || !highlighted || !selected )) ) 
    {
       // no, don't draw anything
       return;
@@ -2657,7 +2697,7 @@ void ShapeBase::_prepRenderImage(   SceneRenderState *state,
                // Debug rendering of the mounted shape bounds.
                if ( gShowBoundingBox )
                {
-                  ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+				  ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
                   ri->renderDelegate.bind( this, &ShapeBase::_renderBoundingBox );
                   ri->objectIndex = i;
                   ri->type = RenderPassManager::RIT_Editor;
@@ -2668,10 +2708,22 @@ void ShapeBase::_prepRenderImage(   SceneRenderState *state,
       }
    }
 
+   if ( highlighted || selected )
+   {
+      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+	  if (selected)
+	    ri->renderDelegate.bind( this, &ShapeBase::_renderSelectBox );
+	  else if (highlighted) 
+	  ri->renderDelegate.bind( this, &ShapeBase::_renderHighlightBox );
+      ri->objectIndex = -1;
+      ri->type = RenderPassManager::RIT_Editor;
+      state->getRenderPass()->addInst( ri );      
+   }  
+   
    // Debug rendering of the shape bounding box.
    if ( gShowBoundingBox )
    {
-      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+	  ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
       ri->renderDelegate.bind( this, &ShapeBase::_renderBoundingBox );
       ri->objectIndex = -1;
       ri->type = RenderPassManager::RIT_Editor;
@@ -2759,6 +2811,7 @@ void ShapeBase::renderMountedImage( U32 imageSlot, TSRenderState &rstate, SceneR
 
 void ShapeBase::_renderBoundingBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat )
 {
+   Con::printf("_render");
    // If we got an override mat then this some
    // special rendering pass... skip out of it.
    if ( overrideMat )
@@ -2768,9 +2821,10 @@ void ShapeBase::_renderBoundingBox( ObjectRenderInst *ri, SceneRenderState *stat
    desc.setZReadWrite( true, false );
    desc.setBlend( true );
    desc.fillMode = GFXFillWireframe;
+   const ColorI color = ColorI( 0, 0, 255 );
 
    GFXDrawUtil *drawer = GFX->getDrawUtil();
-
+   Con::printf("_render 1");
    if ( ri->objectIndex != -1 )
    {
       MountedImage &image = mMountedImageList[ ri->objectIndex ];
@@ -2782,12 +2836,52 @@ void ShapeBase::_renderBoundingBox( ObjectRenderInst *ri, SceneRenderState *stat
 
          const Box3F &objBox = image.shapeInstance[getImageShapeIndex(image)]->getShape()->bounds;
 
-         drawer->drawCube( desc, objBox, ColorI( 255, 255, 255 ), &mat );
-      }
+         drawer->drawCube( desc, objBox, color, &mat );
+         Con::printf("_render 1.5");
+	  }
    }
    else   
-      drawer->drawCube( desc, mObjBox, ColorI( 255, 255, 255 ), &mRenderObjToWorld );
+      drawer->drawCube( desc, mObjBox, color, &mRenderObjToWorld );
+   Con::printf("_render 2");
 }
+
+void ShapeBase::_renderSelectBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat )
+{
+   if ( overrideMat )
+      return;
+   
+   ColorI color = ColorI( 0, 0, 255 );
+
+   GFXStateBlockDesc desc;
+   desc.setZReadWrite( true, false );
+   desc.setBlend( true );
+   desc.fillMode = GFXFillWireframe;
+
+   GFXDrawUtil *drawer = GFX->getDrawUtil();
+
+   drawer->drawCube( desc, mObjBox, color, &mRenderObjToWorld );
+}
+
+void ShapeBase::_renderHighlightBox( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat )
+{
+   if ( overrideMat )
+      return;
+   
+   const ColorI color = ColorI( 255, 255, 255 );   
+   
+   if (selected)
+	 ColorI color = ColorI( 0, 0, 255 );
+
+   GFXStateBlockDesc desc;
+   desc.setZReadWrite( true, false );
+   desc.setBlend( true );
+   desc.fillMode = GFXFillWireframe;
+
+   GFXDrawUtil *drawer = GFX->getDrawUtil();
+
+   drawer->drawCube( desc, mObjBox, color, &mRenderObjToWorld );
+}
+
 
 bool ShapeBase::castRay(const Point3F &start, const Point3F &end, RayInfo* info)
 {

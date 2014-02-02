@@ -85,6 +85,8 @@ void WindowInputGenerator::generateInputEvent( InputEventInfo &inputEvent )
    if( !mInputController || !mFocused )
       return;
 
+   //Con::printf("%f", mInputController);
+   
    // Give the ActionMap first shot.
    if (ActionMap::handleEventGlobal(&inputEvent))
       return;
